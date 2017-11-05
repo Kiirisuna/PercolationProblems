@@ -213,55 +213,6 @@ void joinGridB(Bond **grid){
         }
     }
 
-/*
-//function for determining if a grid node is occupied for site percolation 
-void sitePerc(Node **grid){
-    for (int i=0; i < gridS; i++){
-        for (int j=0; j < gridS; j++){
-            Node *gp = &grid[i][j];
-            float occup;
-            //Generate random number from 0 to 1 for node occupancy
-            occup = rand();
-            occup /= (RAND_MAX);
-            //Check if node is occupied
-            if (occup <= p){
-                gp -> setOccu(0);
-            } else {
-                gp -> setOccu(1);
-            }
-
-        }
-    }
-}
-*/
-/*
-// fill bonds with occupancy
-void bondPerc(Bond **grid){
-    for (int i=0; i < gridS; i++){
-        for (int j=0; j < gridS; j++){
-            Bond *gp = &grid[i][j];
-            float rOccup;
-            float bOccup;
-            //Generate random number from 0 to 1 for bond occupancy
-            rOccup = rand();
-            rOccup /= (RAND_MAX);
-            bOccup = rand();
-            bOccup /= (RAND_MAX);
-            //Check if bonds are occupied
-            if (rOccup <= p){
-                gp ->setRBond(0) ;
-            } else {
-                gp ->setRBond(1) ;
-            }
-            if (bOccup <= p){
-                gp ->setBBond(0) ;
-            } else {
-                gp ->setBBond(1) ;
-            }
-        }
-    }
-}
-*/
 int siteCheck(Node **grid){
     std::map<Node*,bool> visited;
     int percolates=1;
