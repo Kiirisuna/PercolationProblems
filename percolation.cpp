@@ -2,6 +2,8 @@
 #include <map>
 #include "percolation.h"
 #include <sys/time.h>
+#include <unordered_map>
+#include <vector>
 
 
 #define CHARLEN 20
@@ -108,8 +110,9 @@ int trdReturn(void){
 
 //Fucntion for creating a wraparound site percolation grid
 void joinGridN(Node **grid) {
+#pragma omp parallel for shared(grid) collapse(2)
     for (int i = 0; i < gridS; i++) {
-#pragma omp parallel for shared(grid)
+
         for (int j = 0; j < gridS; j++) {
             Node *gp = &grid[i][j];
             int NSEW[4];
@@ -158,8 +161,8 @@ void joinGridN(Node **grid) {
 
 //function for creating a wraparound bond percolation grid
 void joinGridB(Bond **grid){
+#pragma omp paralell for shared(grid) colapse(2)
     for (int i=0; i < gridS; i++){
-#pragma omp paralell for shared(grid)
         for (int j=0; j < gridS; j++){
             Bond *gp = &grid[i][j];
             int NSEW[4];
@@ -215,25 +218,23 @@ void joinGridB(Bond **grid){
     }
 
 int siteCheck(Node **grid){
-    std::map<Node*,bool> visited;
+     std::unordered_map<Node*,bool> visitedG;
 
-    //  std::map<Node*,bool> visited;
-    printf("This long \n");
     int percolates=1;
     for(int i=0;i<gridS;i++){
-        //std::map<Node*,bool> visited;
-        //printf("This long \n");
-#pragma omp parallel for firstprivate(visited) shared(percolates,lrgestCluster)
-        //lastprivate(visited)
+
+#pragma omp parallel for schedule(guided) shared(visitedG)
+
         for(int j=0;j<gridS;j++){
+            std::unordered_map<Node*,bool> visited;
+
             std::stack<Node*> nodeS;
             Node *gridPoint=&grid[i][j];
             Node *startPoint=&grid[i][j];
             int clusterSize=0;
             //Push site onto stack
-            if (gridPoint->getOccu()==0 && visited[gridPoint]!=true){
+            if (gridPoint->getOccu()==0 && visitedG[gridPoint]!=true){
                 nodeS.push(gridPoint);
-//#pragma omp critical(Visit)
                 visited[gridPoint]=true;
 
             }else{
@@ -261,37 +262,30 @@ int siteCheck(Node **grid){
 
                 if(site->getNorth()->getOccu()==0 && visited[site->getNorth()]!=true){
                     nodeS.push(site->getNorth());
-//#pragma omp critical(Visit)
                     visited[site->getNorth()]=true;
                 } else {
-//#pragma omp critical(Visit)
                     visited[site->getNorth()]=true;
                 }
 
                 if(site->getSouth()->getOccu()==0 && visited[site->getSouth()]!=true){
                     nodeS.push(site->getSouth());
-//#pragma omp critical(Visit)
                     visited[site->getSouth()]=true;
                 } else {
-//#pragma omp critical(Visit)
                     visited[site->getSouth()]=true;
                 }
 
                 if(site->getEast()->getOccu()==0 && visited[site->getEast()]!=true){
                     nodeS.push(site->getEast());
-//#pragma omp critical(Visit)
                     visited[site->getEast()]=true;
                 } else {
-//#pragma omp critical(Visit)
                     visited[site->getEast()]=true;
                 }
 
                 if(site->getWest()->getOccu()==0 && visited[site->getWest()]!=true){
                     nodeS.push(site->getWest());
-//#pragma omp critical(Visit)
                     visited[site->getWest()]=true;
                 } else {
-//#pragma omp critical(Visit)
+
                     visited[site->getWest()]=true;
                 }
                 //Increase cluster size
@@ -337,7 +331,7 @@ int siteCheck(Node **grid){
                     }
                 }
             }
-//#pragma omp critical
+
 
                 //Update largest cluster, if current cluster is larger
                 if (clusterSize > lrgestCluster)lrgestCluster = clusterSize;
@@ -345,41 +339,55 @@ int siteCheck(Node **grid){
                     percolates = 0;
                 }
 
-            //printf ("Fucking Random Potatoes aye\n");
+            //printf ("%i, %i\n",i,j);
+#pragma omp critical
+            for(auto it = visited.begin(); it != visited.end(); ++it) visitedG[it->first] += it->second;
+
         }
         //printf(visited.empty()?"empty\n":"not empty\n");
     }
+
     //Return if grid percolates or not
     return percolates;
 }
 
 
 int bondCheck(Bond **grid){
-    std::map<Bond*,bool> rVisited;
-    std::map<Bond*,bool> bVisited;
+   // std::unordered_map<Bond*,bool> rVisitedG;
+   // std::unordered_map<Bond*,bool> bVisitedG;
+    std::unordered_map<Bond*,bool> gVisited;
     int  percolates = 1;
     for(int i=0;i<gridS;i++) {
-#pragma omp parallel for firstprivate(rVisited,bVisited)\
-        lastprivate(rVisited,bVisited)
+#pragma omp parallel for schedule(guided) //shared(rVisitedG,bVisitedG)
         for (int j = 0; j < gridS; j++) {
             Bond *gridPoint = &grid[i][j];
-            std::stack<Bond*> bondS;
+            std::stack<Bond *> bondS;
+            std::unordered_map<Bond*,bool> rVisited;
+            std::unordered_map<Bond*,bool> bVisited;
 
             int visitedRows[gridS];
             int visitedCols[gridS];
 
-            for (int p=0;p < gridS; p++){
-                visitedRows[p]=1;
-                visitedCols[p]=1;
+            for (int p = 0; p < gridS; p++) {
+                visitedRows[p] = 1;
+                visitedCols[p] = 1;
             }
 
-            visitedRows[i]=0;
-            visitedCols[j]=0;
+            visitedRows[i] = 0;
+            visitedCols[j] = 0;
 
-            int clusterSize=0;
-            bondS.push(gridPoint);
+            int clusterSize = 0;
+            if(gVisited[gridPoint]!=true) {
+                bondS.push(gridPoint);
+            }
+            else{
+                continue;
+            }
+
+
 
             while(!bondS.empty()){
+
                 Bond *bond;
                 bond = bondS.top();
                 bondS.pop();
@@ -388,16 +396,34 @@ int bondCheck(Bond **grid){
                 //Check each bond, update check array and push node onto stack
                 if(bond->getRBond() == 0 && rVisited[bond]!=true){
                     bondS.push(bond->getEast());
+                    rVisited[bond]=true;
+                }
+                else{
+                    rVisited[bond]=true;
                 }
                 if(bond->getBBond() == 0 && bVisited[bond]!=true){
                     bondS.push(bond->getSouth());
+                    bVisited[bond]=true;
+                }
+                else{
+                    bVisited[bond]=true;
                 }
                 if(bond->getWest()->getRBond() == 0 && rVisited[bond->getWest()]!=true) {
                     bondS.push(bond->getWest());
+                    rVisited[bond->getWest()]=true;
+                }
+                else{
+                    rVisited[bond->getWest()]=true;
                 }
                 if(bond->getNorth()->getBBond() == 0 && bVisited[bond->getNorth()]!=true) {
                     bondS.push(bond->getNorth());
+                    bVisited[bond->getNorth()]=true;
                 }
+                else{
+                    bVisited[bond->getNorth()]=true;
+                }
+#pragma omp critical
+                gVisited[bond]=true;
                 clusterSize +=1;
             }
             {
@@ -438,6 +464,13 @@ int bondCheck(Bond **grid){
                     percolates = 0;
                 }
             }
+
+//#pragma omp critical
+//            for(auto it = rVisited.begin(); it != rVisited.end(); ++it) rVisitedG[it->first] += it->second;
+//#pragma omp critical
+//            for(auto it = bVisited.begin(); it != bVisited.end(); ++it) bVisitedG[it->first] += it->second;
+
+
         }
     }
     return percolates;
