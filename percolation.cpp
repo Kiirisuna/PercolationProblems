@@ -1,6 +1,7 @@
 #include <stack>
 #include <map>
 #include "percolation.h"
+#include <sys/time.h>
 
 
 #define CHARLEN 20
@@ -108,7 +109,7 @@ int trdReturn(void){
 //Fucntion for creating a wraparound site percolation grid
 void joinGridN(Node **grid) {
     for (int i = 0; i < gridS; i++) {
-#pragma omp paralell for
+#pragma omp parallel for shared(grid)
         for (int j = 0; j < gridS; j++) {
             Node *gp = &grid[i][j];
             int NSEW[4];
@@ -158,7 +159,7 @@ void joinGridN(Node **grid) {
 //function for creating a wraparound bond percolation grid
 void joinGridB(Bond **grid){
     for (int i=0; i < gridS; i++){
-#pragma omp paralell for
+#pragma omp paralell for shared(grid)
         for (int j=0; j < gridS; j++){
             Bond *gp = &grid[i][j];
             int NSEW[4];
@@ -215,10 +216,15 @@ void joinGridB(Bond **grid){
 
 int siteCheck(Node **grid){
     std::map<Node*,bool> visited;
+
+    //  std::map<Node*,bool> visited;
+    printf("This long \n");
     int percolates=1;
     for(int i=0;i<gridS;i++){
-#pragma omp parallel for firstprivate(visited)\
-        lastprivate(visited)
+        //std::map<Node*,bool> visited;
+        //printf("This long \n");
+#pragma omp parallel for firstprivate(visited) shared(percolates,lrgestCluster)
+        //lastprivate(visited)
         for(int j=0;j<gridS;j++){
             std::stack<Node*> nodeS;
             Node *gridPoint=&grid[i][j];
@@ -227,7 +233,9 @@ int siteCheck(Node **grid){
             //Push site onto stack
             if (gridPoint->getOccu()==0 && visited[gridPoint]!=true){
                 nodeS.push(gridPoint);
+//#pragma omp critical(Visit)
                 visited[gridPoint]=true;
+
             }else{
                 continue;
             }
@@ -253,29 +261,37 @@ int siteCheck(Node **grid){
 
                 if(site->getNorth()->getOccu()==0 && visited[site->getNorth()]!=true){
                     nodeS.push(site->getNorth());
+//#pragma omp critical(Visit)
                     visited[site->getNorth()]=true;
                 } else {
+//#pragma omp critical(Visit)
                     visited[site->getNorth()]=true;
                 }
 
                 if(site->getSouth()->getOccu()==0 && visited[site->getSouth()]!=true){
                     nodeS.push(site->getSouth());
+//#pragma omp critical(Visit)
                     visited[site->getSouth()]=true;
                 } else {
+//#pragma omp critical(Visit)
                     visited[site->getSouth()]=true;
                 }
 
                 if(site->getEast()->getOccu()==0 && visited[site->getEast()]!=true){
                     nodeS.push(site->getEast());
+//#pragma omp critical(Visit)
                     visited[site->getEast()]=true;
                 } else {
+//#pragma omp critical(Visit)
                     visited[site->getEast()]=true;
                 }
 
                 if(site->getWest()->getOccu()==0 && visited[site->getWest()]!=true){
                     nodeS.push(site->getWest());
+//#pragma omp critical(Visit)
                     visited[site->getWest()]=true;
                 } else {
+//#pragma omp critical(Visit)
                     visited[site->getWest()]=true;
                 }
                 //Increase cluster size
@@ -339,8 +355,8 @@ int siteCheck(Node **grid){
 
 
 int bondCheck(Bond **grid){
-    std::map<Node*,bool> rVisited;
-    std::map<Node*,bool> bVisited;
+    std::map<Bond*,bool> rVisited;
+    std::map<Bond*,bool> bVisited;
     int  percolates = 1;
     for(int i=0;i<gridS;i++) {
 #pragma omp parallel for firstprivate(rVisited,bVisited)\

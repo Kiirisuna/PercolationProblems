@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdio.h>
+#include<sys/time.h>
 
 
 
@@ -10,6 +11,10 @@ int trdCount;
 
 int main(int argc, char *argv[])
 {
+    int a[100000];
+    int i,sum;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
 
     //Number of arguments checkers
     if(argc>6){
@@ -161,7 +166,11 @@ int main(int argc, char *argv[])
         }
     }
 
+    gettimeofday(&end, NULL);
+    float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
+             end.tv_usec - start.tv_usec) / 1.e6;
 
+    printf("time= %12.10f\n",delta);
     exit (EXIT_SUCCESS);
 }
 
