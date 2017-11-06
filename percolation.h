@@ -13,15 +13,17 @@
 #include <math.h>
 #include "NodeBond.h"
 //#include <mpi.h>
+#endif //CITS3200_PERCOLATION_H
 
 
-
+extern int *startI;
+extern int *finishI;
+extern int myRank;
 extern int gridS;
 extern float p;
 extern int percT;
 extern int lrgestCluster;
 extern int trdCount;
-#endif //CITS3200_PERCOLATION_H
 
 void exitStatus(char *ex);
 int occupancy(void);
@@ -29,7 +31,8 @@ int gridSize(void);
 int percStatus(void);
 int percType(void);
 int trdReturn(void);
-void joinGridN(Node **grid);
+void joinGridNM(Node **grid);
+void joinGridNS(Node **grid,int occupancy[]);
 void joinGridB(Bond **grid);
 void sitePerc(Node **grid);
 void bondPerc(Bond **grid);

@@ -8,10 +8,26 @@
 #include"percolation.h"
 
 int trdCount;
+int *startI;
+int *finishI;
+int myRank;
 
 int main(int argc, char *argv[])
 {
-    int a[100000];
+    MPI_Init(&argc, &argv);
+    int numProcesses;
+    MPI_Comm_size(MPI_COMM_WORLD,&numProcesses);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myRank);
+    startI=(int*)malloc(numProcesses*sizeof(int));
+    finishI=(int*)malloc(numProcesses*sizeof(int));
+    startI[myRank]=myRank*gridS/numProcesses;
+    if (myRank==numProcesses-1){
+        finishI[myRank]=gridS-1;
+    }
+    else {
+        finishI[myRank]=((myRank+1)*gridS/numProcesses)-1;
+    }
+
     int i,sum;
     struct timeval start, end;
     gettimeofday(&start, NULL);
@@ -127,7 +143,16 @@ int main(int argc, char *argv[])
 
 
 
+
+
+
+
+
+
+
+
     if (validp==0){
+
         //Allocate memory for stack
         //Initialise grid of NODE and allocating memory
         Node **grid;
@@ -135,14 +160,58 @@ int main(int argc, char *argv[])
         for (int i=0; i < gridS; i++){
             grid[i]= (Node *) malloc(sizeof(Node) * gridS);
         }
+        struct{
 
-        //Initialise grid of NODE and allocating memory
-        joinGridN(grid);
+        };
+        if(myRank==0) {
+            //Initialise grid of NODE and allocating memory
+            joinGridNM(grid);
+            int occuArray[gridS*gridS];
+            for(int k=0;k<gridS;k++){
+                for(int l=0;l<gridS;l++){
+                    occuArray[k*gridS+l]=grid[k][l].getOccu();
+                }
+
+            }
+            MPI_Bcast(&occuArray,gridS*gridS,MPI_INT,myRank,MPI_COMM_WORLD);
+
+        }
+
+        if(myRank!=0){
+            int occuArray[gridS*gridS];
+            MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            joinGridNS(grid,occuArray);
+        }
+
+
+
+
         //Seeding occupancy probability for nodes in the grid
         //sitePerc(grid);
         //Run percolation code for site percolation
         int ans = siteCheck(grid);
-
+        if(myRank!=0){
+            MPI_Send(&ans,1,MPI_INT,0,0,MPI_COMM_WORLD);
+            MPI_Send(&lrgestCluster,1,MPI_INT,1,0,MPI_COMM_WORLD);
+        }
+        else{
+            int answers[numProcesses];
+            int lrgstClusters[numProcesses];
+            answers[0]=ans;
+            lrgstClusters[0]=lrgestCluster;
+            for(int p=1;p<numProcesses-1;p++){
+                MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            }
+            for(int q=0;q<numProcesses;q++){
+                if(lrgstClusters[q]>lrgestCluster){
+                    lrgestCluster=lrgstClusters[q];
+                }
+                if(ans==1&&answers[q]!=1){
+                    ans=0;
+                }
+            }
+        }
         if (ans==0){
             printf("\n The grid percolates with largest cluster %i\n",lrgestCluster);
         } else {

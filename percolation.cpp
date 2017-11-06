@@ -106,7 +106,7 @@ int trdReturn(void){
 }
 
 //Fucntion for creating a wraparound site percolation grid
-void joinGridN(Node **grid) {
+void joinGridNM(Node **grid) {
 #pragma omp parallel for shared(grid) collapse(2)
     for (int i = 0; i < gridS; i++) {
         for (int j = 0; j < gridS; j++) {
@@ -151,6 +151,46 @@ void joinGridN(Node **grid) {
             } else {
                 gp->setOccu(1);
             }
+        }
+    }
+}
+void joinGridNS(Node **grid,int occupancy[]) {
+#pragma omp parallel for shared(grid) collapse(2)
+    for (int i = 0; i < gridS; i++) {
+        for (int j = 0; j < gridS; j++) {
+            Node *gp = &grid[i][j];
+            int NSEW[4];
+            //Determining the 'j' of north and south component
+            if (j == 0) {
+                NSEW[0] = gridS - 1;
+                NSEW[1] = j + 1;
+            } else if (j == gridS - 1) {
+                NSEW[0] = j - 1;
+                NSEW[1] = 0;
+            } else {
+                NSEW[0] = j - 1;
+                NSEW[1] = j + 1;
+            }
+            //Determining the 'i' of east and west component
+            if (i == 0) {
+                NSEW[2] = i + 1;
+                NSEW[3] = gridS - 1;
+            } else if (i == gridS - 1) {
+                NSEW[2] = 0;
+                NSEW[3] = i - 1;
+            } else {
+                NSEW[2] = i + 1;
+                NSEW[3] = i - 1;
+            }
+            //Updating fields in the structure
+            gp->setWest(&grid[NSEW[3]][j]);
+            gp->setEast(&grid[NSEW[2]][j]);
+            gp->setSouth(&grid[i][NSEW[1]]);
+            gp->setNorth(&grid[i][NSEW[0]]);
+            gp->setNodei(i);
+            gp->setNodej(j);
+            //Generate random number from 0 to 1 for node occupancy (generated and passed by
+            gp->setOccu(occupancy[i*gridS+j]);
         }
     }
 }
@@ -216,9 +256,10 @@ void joinGridB(Bond **grid){
 int siteCheck(Node **grid){
     std::unordered_map<Node*,bool> gVisited;
     int percolates=1;
-    for(int i=0;i<gridS;i++){
+    for(int i=startI[myRank];i<finishI[myRank];i++){
 #pragma omp parallel for schedule(guided) shared(gVisited)
         for(int j=0;j<gridS;j++){
+            std::unordered_map<Node*,bool> visited;
             std::stack<Node*> nodeS;
             Node *gridPoint=&grid[i][j];
             Node *startPoint=&grid[i][j];
@@ -233,7 +274,6 @@ int siteCheck(Node **grid){
             
             //Variables required, initialised after checking if site is valid
             //Map holding the current visited sites by this particular tree
-            std::unordered_map<Node*,bool> visited;
             int clusterSize=0;
             
             //Array for checking if it percolates
@@ -349,7 +389,7 @@ int bondCheck(Bond **grid){
     //global visited sites
     std::unordered_map<Bond*,bool> gVisited;
     int  percolates = 1;
-    for(int i=0;i<gridS;i++) {
+    for(int i=startI[myRank];i<finishI[myRank];i++) {
 #pragma omp parallel for schedule(guided)
         for (int j = 0; j < gridS; j++) {
             Bond *gridPoint = &grid[i][j];
