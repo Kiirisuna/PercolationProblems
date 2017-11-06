@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
             printf("\n The grid does not percolate and has a largest cluster of %i\n",lrgestCluster);
         }
     }
-    MPI_Finalise();
+    MPI_Finalize();
     gettimeofday(&end, NULL);
     float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
              end.tv_usec - start.tv_usec) / 1.e6;
