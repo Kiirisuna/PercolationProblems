@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <vector>
 
-
 #define CHARLEN 20
 
 //global variables, gridS = grid size, p = probability
@@ -15,8 +14,6 @@ float p = 0.0;
 int percT;
 int lrgestCluster;
 int currentCluster=0;
-
-
 
 //Function for exit status
 void exitStatus(char *ex){
@@ -112,7 +109,6 @@ int trdReturn(void){
 void joinGridN(Node **grid) {
 #pragma omp parallel for shared(grid) collapse(2)
     for (int i = 0; i < gridS; i++) {
-
         for (int j = 0; j < gridS; j++) {
             Node *gp = &grid[i][j];
             int NSEW[4];
@@ -218,32 +214,32 @@ void joinGridB(Bond **grid){
     }
 
 int siteCheck(Node **grid){
-     std::unordered_map<Node*,bool> visitedG;
-
+    std::unordered_map<Node*,bool> gVisited;
     int percolates=1;
     for(int i=0;i<gridS;i++){
-
-#pragma omp parallel for schedule(guided) shared(visitedG)
-
+#pragma omp parallel for schedule(guided) shared(gVisited)
         for(int j=0;j<gridS;j++){
-            std::unordered_map<Node*,bool> visited;
-
             std::stack<Node*> nodeS;
             Node *gridPoint=&grid[i][j];
             Node *startPoint=&grid[i][j];
-            int clusterSize=0;
+            
             //Push site onto stack
-            if (gridPoint->getOccu()==0 && visitedG[gridPoint]!=true){
+            if (gridPoint->getOccu()==0 && gVisited[gridPoint]!=true){
                 nodeS.push(gridPoint);
                 visited[gridPoint]=true;
-
             }else{
                 continue;
             }
-
+            
+            //Variables required, initialised after checking if site is valid
+            //Map holding the current visited sites by this particular tree
+            std::unordered_map<Node*,bool> visited;
+            int clusterSize=0;
+            
             //Array for checking if it percolates
             int visitedRows[gridS];
             int visitedCols[gridS];
+            
             //Initialise the array with 1s (not seen)
             for (int p=0;p < gridS; p++){
                 visitedRows[p]=1;
@@ -252,46 +248,46 @@ int siteCheck(Node **grid){
             //Set the current grid row and column to 0 (seen)
             visitedRows[i]=0;
             visitedCols[j]=0;
-
+            
             while(!nodeS.empty()){
                 Node *site;
                 site = nodeS.top();
                 nodeS.pop();
                 visitedRows[site->getNodei()]=0;
                 visitedCols[site->getNodej()]=0;
-
+                
                 if(site->getNorth()->getOccu()==0 && visited[site->getNorth()]!=true){
                     nodeS.push(site->getNorth());
                     visited[site->getNorth()]=true;
                 } else {
                     visited[site->getNorth()]=true;
                 }
-
+                
                 if(site->getSouth()->getOccu()==0 && visited[site->getSouth()]!=true){
                     nodeS.push(site->getSouth());
                     visited[site->getSouth()]=true;
                 } else {
                     visited[site->getSouth()]=true;
                 }
-
+                
                 if(site->getEast()->getOccu()==0 && visited[site->getEast()]!=true){
                     nodeS.push(site->getEast());
                     visited[site->getEast()]=true;
                 } else {
                     visited[site->getEast()]=true;
                 }
-
+                
                 if(site->getWest()->getOccu()==0 && visited[site->getWest()]!=true){
                     nodeS.push(site->getWest());
                     visited[site->getWest()]=true;
                 } else {
-
+                    
                     visited[site->getWest()]=true;
                 }
                 //Increase cluster size
                 clusterSize+=1;
             }
-
+            
             int tempPerc= 1;
             //If grid hasn't percolate yet, execute the following
             if (percolates == 1) {
@@ -313,7 +309,7 @@ int siteCheck(Node **grid){
                         if (visitedCols[e] == 1) {
                             break;
                         }
-
+                        
                         if (e == gridS - 1) {
                             tempPerc = 0;
                         }
@@ -324,70 +320,65 @@ int siteCheck(Node **grid){
                         if ((visitedCols[e] == 1 || visitedRows[e] == 1)) {
                             break;
                         }
-
+                        
                         if (e == gridS - 1) {
                             tempPerc = 0;
                         }
                     }
                 }
             }
-
-
-                //Update largest cluster, if current cluster is larger
-                if (clusterSize > lrgestCluster)lrgestCluster = clusterSize;
-                if (tempPerc == 0){
-                    percolates = 0;
-                }
-
-            //printf ("%i, %i\n",i,j);
+            
+            
+            //Update largest cluster, if current cluster is larger and percolates, if grid percolates
+            if (clusterSize > lrgestCluster)lrgestCluster = clusterSize;
+            if (tempPerc == 0){
+                percolates = 0;
+            }
+            //Only a single thread can update the global visited at once
 #pragma omp critical
-            for(auto it = visited.begin(); it != visited.end(); ++it) visitedG[it->first] += it->second;
-
+            for(auto it = visited.begin(); it != visited.end(); ++it) gVisited[it->first] += it->second;
+            
         }
-        //printf(visited.empty()?"empty\n":"not empty\n");
     }
-
     //Return if grid percolates or not
     return percolates;
 }
 
 
 int bondCheck(Bond **grid){
-   // std::unordered_map<Bond*,bool> rVisitedG;
-   // std::unordered_map<Bond*,bool> bVisitedG;
+    //global visited sites
     std::unordered_map<Bond*,bool> gVisited;
     int  percolates = 1;
     for(int i=0;i<gridS;i++) {
-#pragma omp parallel for schedule(guided) //shared(rVisitedG,bVisitedG)
+#pragma omp parallel for schedule(guided)
         for (int j = 0; j < gridS; j++) {
             Bond *gridPoint = &grid[i][j];
             std::stack<Bond *> bondS;
-            std::unordered_map<Bond*,bool> rVisited;
-            std::unordered_map<Bond*,bool> bVisited;
-
+            
             int visitedRows[gridS];
             int visitedCols[gridS];
-
+            
             for (int p = 0; p < gridS; p++) {
                 visitedRows[p] = 1;
                 visitedCols[p] = 1;
             }
-
+            
             visitedRows[i] = 0;
             visitedCols[j] = 0;
-
-            int clusterSize = 0;
+            
             if(gVisited[gridPoint]!=true) {
                 bondS.push(gridPoint);
             }
             else{
                 continue;
             }
-
-
-
+            
+            int clusterSize = 0;
+            //Map for bonds that have been checked
+            std::unordered_map<Bond*,bool> rVisited;
+            std::unordered_map<Bond*,bool> bVisited;
+            
             while(!bondS.empty()){
-
                 Bond *bond;
                 bond = bondS.top();
                 bondS.pop();
@@ -401,6 +392,7 @@ int bondCheck(Bond **grid){
                 else{
                     rVisited[bond]=true;
                 }
+                
                 if(bond->getBBond() == 0 && bVisited[bond]!=true){
                     bondS.push(bond->getSouth());
                     bVisited[bond]=true;
@@ -408,6 +400,7 @@ int bondCheck(Bond **grid){
                 else{
                     bVisited[bond]=true;
                 }
+                
                 if(bond->getWest()->getRBond() == 0 && rVisited[bond->getWest()]!=true) {
                     bondS.push(bond->getWest());
                     rVisited[bond->getWest()]=true;
@@ -415,6 +408,7 @@ int bondCheck(Bond **grid){
                 else{
                     rVisited[bond->getWest()]=true;
                 }
+                
                 if(bond->getNorth()->getBBond() == 0 && bVisited[bond->getNorth()]!=true) {
                     bondS.push(bond->getNorth());
                     bVisited[bond->getNorth()]=true;
@@ -422,55 +416,45 @@ int bondCheck(Bond **grid){
                 else{
                     bVisited[bond->getNorth()]=true;
                 }
+                clusterSize +=1;
 #pragma omp critical
                 gVisited[bond]=true;
-                clusterSize +=1;
             }
-            {
-                int tempPerc = 1;
-                if (percolates == 1) {
-                    if (percT == 0) {
-                        for (int e = 0; e < gridS; e++) {
-                            if (visitedRows[e] == 1) {
-                                break;
-                            }
-                            if (e == gridS - 1) {
-                                tempPerc = 0;
-                            }
+            int tempPerc = 1;
+            if (percolates == 1) {
+                if (percT == 0) {
+                    for (int e = 0; e < gridS; e++) {
+                        if (visitedRows[e] == 1) {
+                            break;
                         }
-                    } else if (percT == 1) {
-                        for (int e = 0; e < gridS; e++) {
-                            if (visitedCols[e] == 1) {
-                                break;
-                            }
-                            if (e == gridS - 1) {
-                                tempPerc = 0;
-                            }
+                        if (e == gridS - 1) {
+                            tempPerc = 0;
                         }
-                    } else {
-                        for (int e = 0; e < gridS; e++) {
-                            if ((visitedCols[e] == 1 || visitedRows[e] == 1)) {
-                                break;
-                            }
-                            if (e == gridS - 1) {
-                                tempPerc = 0;
-                            }
+                    }
+                } else if (percT == 1) {
+                    for (int e = 0; e < gridS; e++) {
+                        if (visitedCols[e] == 1) {
+                            break;
+                        }
+                        if (e == gridS - 1) {
+                            tempPerc = 0;
+                        }
+                    }
+                } else {
+                    for (int e = 0; e < gridS; e++) {
+                        if ((visitedCols[e] == 1 || visitedRows[e] == 1)) {
+                            break;
+                        }
+                        if (e == gridS - 1) {
+                            tempPerc = 0;
                         }
                     }
                 }
-
-                if (clusterSize > lrgestCluster)lrgestCluster = clusterSize;
-                if (tempPerc == 0){
-                    percolates = 0;
-                }
             }
-
-//#pragma omp critical
-//            for(auto it = rVisited.begin(); it != rVisited.end(); ++it) rVisitedG[it->first] += it->second;
-//#pragma omp critical
-//            for(auto it = bVisited.begin(); it != bVisited.end(); ++it) bVisitedG[it->first] += it->second;
-
-
+            if (clusterSize > lrgestCluster)lrgestCluster = clusterSize;
+            if (tempPerc == 0){
+                percolates = 0;
+            }
         }
     }
     return percolates;
