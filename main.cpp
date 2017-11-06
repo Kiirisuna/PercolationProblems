@@ -18,15 +18,7 @@ int main(int argc, char *argv[])
     int numProcesses;
     MPI_Comm_size(MPI_COMM_WORLD,&numProcesses);
     MPI_Comm_rank(MPI_COMM_WORLD,&myRank);
-    startI=(int*)malloc(numProcesses*sizeof(int));
-    finishI=(int*)malloc(numProcesses*sizeof(int));
-    startI[myRank]=myRank*gridS/numProcesses;
-    if (myRank==numProcesses-1){
-        finishI[myRank]=gridS-1;
-    }
-    else {
-        finishI[myRank]=((myRank+1)*gridS/numProcesses)-1;
-    }
+    
 
     int i,sum;
     struct timeval start, end;
@@ -141,15 +133,15 @@ int main(int argc, char *argv[])
     //Set number of threads that will be executed
     omp_set_num_threads(trdCount);
 
-
-
-
-
-
-
-
-
-
+    startI=(int*)malloc(numProcesses*sizeof(int));
+    finishI=(int*)malloc(numProcesses*sizeof(int));
+    startI[myRank]=myRank*gridS/numProcesses;
+    if (myRank==numProcesses-1){
+        finishI[myRank]=gridS-1;
+    }
+    else {
+        finishI[myRank]=((myRank+1)*gridS/numProcesses)-1;
+    }
 
     if (validp==0){
 
@@ -160,9 +152,7 @@ int main(int argc, char *argv[])
         for (int i=0; i < gridS; i++){
             grid[i]= (Node *) malloc(sizeof(Node) * gridS);
         }
-        struct{
-
-        };
+        
         if(myRank==0) {
             //Initialise grid of NODE and allocating memory
             joinGridNM(grid);

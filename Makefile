@@ -1,16 +1,14 @@
-CC=mpicc
+CC=mpic++
 CFLAGS= -fopenmp
-DEPS=NodeBond.h percolation.h
-OBJ=percolation.o NodeBond.o main.o
+all:percolation
 
-percolation: percolation.o NodeBond.o main.o
-	$(CC)  $(CFLAGS) -o percolation percolation.o NodeBond.o main.o
 
-main.o: main.cpp $(DEPS)
-	$(CC) $(CFLAGS) -cpp main.cpp
-NodeBond.o: NodeBond.cpp $(DEPS)
-	$(CC) $(CFLAGS) -cpp NodeBond.cpp
-percolation.o: percolation.cpp $(DEPS)
-	$(CC) $(CFLAGS) -cpp percolation.cpp
-percolation: percolation.o NodeBond.o main.o
-	$(CC)  $(CFLAGS) -o percolation percolation.o NodeBond.o main.o
+percolation:  main.obj NodeBond.obj percolation.obj 
+	$(CC)  $(CFLAGS) -obj percolation percolation.obj NodeBond.obj main.obj
+
+main.obj: main.cpp NodeBond.h percolation.h
+	$(CC) $(CFLAGS) -cpp  main.cpp percolation.h NodeBond.h
+NodeBond.obj: NodeBond.cpp  NodeBond.h percolation.h
+	$(CC) $(CFLAGS) -cpp  NodeBond.cpp percolation.h NodeBond.h
+percolation.obj: percolation.cpp NodeBond.h percolation.h
+	$(CC) $(CFLAGS) -cpp percolation.cpp percolation.h NodeBond.h

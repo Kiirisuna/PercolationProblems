@@ -12,8 +12,8 @@
 #include <omp.h>
 #include <math.h>
 #include "NodeBond.h"
-//#include <mpi.h>
-#endif //CITS3200_PERCOLATION_H
+#include "mpi.h"
+#endif 
 
 
 extern int *startI;
