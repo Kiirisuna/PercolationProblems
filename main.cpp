@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
         if(myRank!=0){
             int occuArray[gridS*gridS];
             MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            printf("I am %i and  have recieved my occuArray",myRank);
             joinGridNS(grid,occuArray);
         }
 
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
         int ans = siteCheck(grid);
         if(myRank!=0){
             MPI_Send(&ans,1,MPI_INT,0,0,MPI_COMM_WORLD);
-            MPI_Send(&lrgestCluster,1,MPI_INT,1,0,MPI_COMM_WORLD);
+            MPI_Send(&lrgestCluster,1,MPI_INT,0,1,MPI_COMM_WORLD);
         }
         else{
             int answers[numProcesses];
@@ -202,10 +203,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        if (ans==0){
-            printf("\n The grid percolates with largest cluster %i\n",lrgestCluster);
-        } else {
-            printf("\n The grid does not percolate and has a largest cluster of %i\n",lrgestCluster);
+        if(myRank==0){
+            if (ans==0){
+                printf("\n The grid percolates with largest cluster %i\n",lrgestCluster);
+            } else {
+                printf("\n The grid does not percolate and has a largest cluster of %i\n",lrgestCluster);
+            }
         }
     } else {
         Bond **grid;
@@ -225,11 +228,11 @@ int main(int argc, char *argv[])
         }
     }
     MPI_Finalize();
-    gettimeofday(&end, NULL);
-    float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
-             end.tv_usec - start.tv_usec) / 1.e6;
+    //gettimeofday(&end, NULL);
+    //float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
+    //         end.tv_usec - start.tv_usec) / 1.e6;
 
-    printf("time= %12.10f\n",delta);
+    //printf("time= %12.10f\n",delta);
     exit (EXIT_SUCCESS);
 }
 
