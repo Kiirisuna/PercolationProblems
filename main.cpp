@@ -166,17 +166,17 @@ int main(int argc, char *argv[])
 
             }
             for(int proc=1;proc<numProcesses;proc++){
-                printf("Master Attempting to send to %i\t",proc);
+                //printf("Master Attempting to send to %i\t",proc);
                 MPI_Send(&occuArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
-                printf("complete send \n");
+                //printf("complete send \n");
             }
         }
 
         if(myRank!=0){
-            printf("i am %i ready to recieve\n",myRank);
+            //printf("i am %i ready to recieve\n",myRank);
             int occuArray[gridS*gridS];
             MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            printf("I am %i and  have recieved my occuArray\n",myRank);
+            //printf("I am %i and  have recieved my occuArray\n",myRank);
             joinGridNS(grid,occuArray);
         }
         MPI_Barrier(MPI_COMM_WORLD);
@@ -188,10 +188,10 @@ int main(int argc, char *argv[])
         //Run percolation code for site percolation
         int ans = siteCheck(grid);
         if(myRank!=0){
-            printf("I am %i preparing to send results",myRank);
+            //printf("I am %i preparing to send results",myRank);
             MPI_Send(&ans,1,MPI_INT,0,0,MPI_COMM_WORLD);
             MPI_Send(&lrgestCluster,1,MPI_INT,0,1,MPI_COMM_WORLD);
-            printf("I am %i and  have sent my results",myRank);
+            //printf("I am %i and  have sent my results",myRank);
 
         }
         else{
@@ -200,10 +200,10 @@ int main(int argc, char *argv[])
             answers[0]=ans;
             lrgstClusters[0]=lrgestCluster;
             for(int p=1;p<numProcesses;p++){
-                printf("Master attempting to recieve results from %i",p);
+                //printf("Master attempting to recieve results from %i",p);
                 MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                printf("I am master and  have recieved my results");
+                //printf("I am master and  have recieved my results");
 
             }
             for(int q=0;q<numProcesses;q++){
@@ -239,6 +239,7 @@ int main(int argc, char *argv[])
             printf("\n The grid does not percolate and has a largest cluster of %i\n",lrgestCluster);
         }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     if(myRank==0){
     gettimeofday(&end, NULL);
