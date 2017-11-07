@@ -184,6 +184,8 @@ int main(int argc, char *argv[])
         if(myRank!=0){
             MPI_Send(&ans,1,MPI_INT,0,0,MPI_COMM_WORLD);
             MPI_Send(&lrgestCluster,1,MPI_INT,0,1,MPI_COMM_WORLD);
+            printf("I am %i and  have sent my results",myRank);
+
         }
         else{
             int answers[numProcesses];
@@ -193,6 +195,8 @@ int main(int argc, char *argv[])
             for(int p=1;p<numProcesses-1;p++){
                 MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                printf("I am master and  have recieved my results");
+
             }
             for(int q=0;q<numProcesses;q++){
                 if(lrgstClusters[q]>lrgestCluster){
