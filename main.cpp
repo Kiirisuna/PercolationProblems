@@ -18,11 +18,13 @@ int main(int argc, char *argv[])
     int numProcesses;
     MPI_Comm_size(MPI_COMM_WORLD,&numProcesses);
     MPI_Comm_rank(MPI_COMM_WORLD,&myRank);
+    printf("I am %i of %i processors \n",myRank,numProcesses);
     
-
-    int i,sum;
-    struct timeval start, end;
-    gettimeofday(&start, NULL);
+    if(myRank==0){
+        int i,sum;
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+    }
 
     //Number of arguments checkers
     if(argc>6){
