@@ -252,7 +252,7 @@ void joinGridBM(Bond **grid){
             }
         }
     }
-void joinGridBS(Bond **grid,int rBondArray[],int bBondArray[]){
+void joinGridBS(Bond **grid,int *rBondArray,int *bBondArray){
 #pragma omp paralell for shared(grid) colapse(2)
     for (int i=0; i < gridS; i++){
         for (int j=0; j < gridS; j++){

@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     }
 
     if(argc<6){
-        printf("too few arguments, treating you like a base level plebian");
+        printf("too few arguments \n");
         exit(EXIT_SUCCESS);
     }
 
@@ -154,51 +154,35 @@ int main(int argc, char *argv[])
         for (int i=0; i < gridS; i++){
             grid[i]= (Node *) malloc(sizeof(Node) * gridS);
         }
-        printf("i am %i and have malloced the things\n",myRank);
         if(myRank==0) {
             //Initialise grid of NODE and allocating memory
             joinGridNM(grid);
-            printf("Master Successfully joined Grid\n");
             int *occuArray;
             occuArray=(int *)malloc(gridS*gridS*sizeof(int));
-            printf("occuArrayCreated \n");
             for(int k=0;k<gridS;k++){
                 for(int l=0;l<gridS;l++){
                     occuArray[k*gridS+l]=grid[k][l].getOccu();
                 }
 
             }
-            printf("Master Successfully flattened Grid\n");
             for(int proc=1;proc<numProcesses;proc++){
-                printf("Master Attempting to send to %i\t",proc);
                 MPI_Send(occuArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
-                printf("complete send \n");
             }
             free(occuArray);
         }
 
         if(myRank!=0){
-            printf("i am %i  and ready to recieve\n",myRank);
             int *occuArray;
             occuArray=(int*)malloc(gridS*gridS*sizeof(int));
             MPI_Recv(occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            printf("I am %i and  have recieved my occuArray\n",myRank);
             joinGridNS(grid,occuArray);
         }
 
-
-
-        //Seeding occupancy probability for nodes in the grid
-        //sitePerc(grid);
         //Run percolation code for site percolation
-        printf("i am %i and am about to siteCheck the things\n",myRank);
         int ans = siteCheck(grid);
-        printf("i am %i and have siteChecked the things\n",myRank);
         if(myRank!=0){
-            printf("I am %i preparing to send results",myRank);
             MPI_Send(&ans,1,MPI_INT,0,0,MPI_COMM_WORLD);
             MPI_Send(&lrgestCluster,1,MPI_INT,0,1,MPI_COMM_WORLD);
-            printf("I am %i and  have sent my results",myRank);
 
         }
         else{
@@ -207,10 +191,8 @@ int main(int argc, char *argv[])
             answers[0]=ans;
             lrgstClusters[0]=lrgestCluster;
             for(int p=1;p<numProcesses;p++){
-                printf("Master attempting to recieve results from %i",p);
                 MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                printf("I am master and  have recieved my results");
 
             }
             for(int q=0;q<numProcesses;q++){
@@ -237,14 +219,16 @@ int main(int argc, char *argv[])
         }
         if(myRank==0){
             joinGridBM(grid);
-            int rBondArray[gridS*gridS];
+            int *rBondArray;
+            rBondArray=(int*)malloc(gridS*gridS*sizeof(int));
             for(int k=0;k<gridS;k++){
                 for(int l=0;l<gridS;l++){
                     rBondArray[k*gridS+l]=grid[k][l].getRBond();
                 }
 
             }
-            int bBondArray[gridS*gridS];
+            int *bBondArray;
+            bBondArray=(int*)malloc(gridS*gridS*sizeof(int));
             for(int k=0;k<gridS;k++){
                 for(int l=0;l<gridS;l++){
                     bBondArray[k*gridS+l]=grid[k][l].getBBond();
@@ -252,19 +236,19 @@ int main(int argc, char *argv[])
 
             }
             for(int proc=1;proc<numProcesses;proc++){
-                printf("Master Attempting to send to %i\t",proc);
-                MPI_Send(&rBondArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
-                MPI_Send(&bBondArray,gridS*gridS,MPI_INT,proc,1,MPI_COMM_WORLD);
-                printf("complete send \n");
+                MPI_Send(rBondArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
+                MPI_Send(bBondArray,gridS*gridS,MPI_INT,proc,1,MPI_COMM_WORLD);
             }
 
 
         }
         else{
-            int rBondArray[gridS*gridS];
-            int bBondArray[gridS*gridS];
-            MPI_Recv(&rBondArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            MPI_Recv(&bBondArray,gridS*gridS,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            int *rBondArray;
+            rBondArray=(int*)malloc(gridS*gridS*sizeof(int));
+            int *bBondArray;
+            bBondArray=(int*)malloc(gridS*gridS*sizeof(int));
+            MPI_Recv(rBondArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            MPI_Recv(bBondArray,gridS*gridS,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
             joinGridBS(grid,rBondArray,bBondArray);
         }
 
@@ -311,19 +295,3 @@ int main(int argc, char *argv[])
     }
     exit (EXIT_SUCCESS);
 }
-
-
-//    int trdCount = gridS/500;
-//    if (trdCount <= 0){
-//        trdCount = 1;
-//    }
-//    //split grid into trdCount^2 number of squares and give each thread a square
-//    int gridSquares = trdCount^2;
-//    int splitS = 0;
-//    int moduloS = 0;
-//    if (GridS % trdCount != 0){
-//        splitS = gridS/trdCount;
-//        moduloS = gridS%trdCount;
-//    } else {
-//        splitS = gridS/trdCount;
-//    }
