@@ -264,10 +264,8 @@ int main(int argc, char *argv[])
             answers[0]=ans;
             lrgstClusters[0]=lrgestCluster;
             for(int p=1;p<numProcesses;p++){
-                //printf("Master attempting to recieve results from %i",p);
                 MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                //printf("I am master and  have recieved my results");
 
             }
             for(int q=0;q<numProcesses;q++){
