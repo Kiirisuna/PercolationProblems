@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     int numProcesses;
     MPI_Comm_size(MPI_COMM_WORLD,&numProcesses);
     MPI_Comm_rank(MPI_COMM_WORLD,&myRank);
-    //printf("I am %i of %i processors \n",myRank,numProcesses);
+    printf("I am %i of %i processors \n",myRank,numProcesses);
     int i,sum;
     struct timeval start, end;
 
@@ -179,7 +179,6 @@ int main(int argc, char *argv[])
             //printf("I am %i and  have recieved my occuArray\n",myRank);
             joinGridNS(grid,occuArray);
         }
-        MPI_Barrier(MPI_COMM_WORLD);
 
 
 
@@ -295,7 +294,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     if(myRank==0){
         gettimeofday(&end, NULL);
