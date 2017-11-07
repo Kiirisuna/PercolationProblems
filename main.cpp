@@ -166,7 +166,9 @@ int main(int argc, char *argv[])
 
             }
             for(int proc=1;proc<numProcesses;proc++){
+                printf("Master Attempting to send to %i\t",proc);
                 MPI_Send(&occuArray,gridS*gridS,MPI_INT,p,0,MPI_COMM_WORLD);
+                printf("complete send \n");
             }
             //MPI_Bcast(&occuArray,gridS*gridS,MPI_INT,myRank,MPI_COMM_WORLD);
 
