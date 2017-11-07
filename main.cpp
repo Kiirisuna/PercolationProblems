@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
         if(myRank!=0){
             //printf("i am %i ready to recieve\n",myRank);
             int occuArray[gridS*gridS];
-            MPI_Recv(occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
             //printf("I am %i and  have recieved my occuArray\n",myRank);
             joinGridNS(grid,occuArray);
         }
@@ -200,8 +200,8 @@ int main(int argc, char *argv[])
             lrgstClusters[0]=lrgestCluster;
             for(int p=1;p<numProcesses;p++){
                 //printf("Master attempting to recieve results from %i",p);
-                MPI_Recv(answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                MPI_Recv(lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 //printf("I am master and  have recieved my results");
 
             }
@@ -255,8 +255,8 @@ int main(int argc, char *argv[])
         else{
             int rBondArray[gridS*gridS];
             int bBondArray[gridS*gridS];
-            MPI_Recv(rBondArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            MPI_Recv(bBondArray,gridS*gridS,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            MPI_Recv(&rBondArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            MPI_Recv(&bBondArray,gridS*gridS,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
             joinGridBS(grid,rBondArray,bBondArray);
         }
 
@@ -273,8 +273,8 @@ int main(int argc, char *argv[])
             lrgstClusters[0]=lrgestCluster;
             for(int p=1;p<numProcesses;p++){
                 //printf("Master attempting to recieve results from %i",p);
-                MPI_Recv(answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                MPI_Recv(lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 //printf("I am master and  have recieved my results");
 
             }
