@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
         printf ("\nInput was incorrect,try again, or insert 'EXIT' to exit");
         validq = trdReturn();
     }
-
+    printf("here,after valiation %i\n",myRank);
     //Set number of threads that will be executed
     omp_set_num_threads(trdCount);
 
@@ -165,7 +165,11 @@ int main(int argc, char *argv[])
                 }
 
             }
-            MPI_Bcast(&occuArray,gridS*gridS,MPI_INT,myRank,MPI_COMM_WORLD);
+            for(int proc=1;proc<numProcesses;proc++){
+                MPI_Send(&occuArray,gridS*gridS,MPI_INT,p,0,MPI_COMM_WORLD);
+            }
+            //MPI_Bcast(&occuArray,gridS*gridS,MPI_INT,myRank,MPI_COMM_WORLD);
+
 
         }
 
