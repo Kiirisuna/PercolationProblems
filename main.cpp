@@ -228,24 +228,80 @@ int main(int argc, char *argv[])
         for (int i=0; i < gridS; i++){
             grid[i]= (Bond *) malloc(sizeof(Bond) * gridS);
         }
+        if(myRank==0){
+            joinGridBM(grid);
+            int rBondArray[gridS*gridS];
+            for(int k=0;k<gridS;k++){
+                for(int l=0;l<gridS;l++){
+                    rBondArray[k*gridS+l]=grid[k][l].getRBond();
+                }
 
-        joinGridB(grid);
-        //bondPerc(grid);
+            }
+            int bBondArray[gridS*gridS];
+            for(int k=0;k<gridS;k++){
+                for(int l=0;l<gridS;l++){
+                    bBondArray[k*gridS+l]=grid[k][l].getBBond();
+                }
+
+            }
+            for(int proc=1;proc<numProcesses;proc++){
+                //printf("Master Attempting to send to %i\t",proc);
+                MPI_Send(&rBondArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
+                MPI_Send(&bBondArray,gridS*gridS,MPI_INT,proc,1,MPI_COMM_WORLD);
+                //printf("complete send \n");
+            }
+
+
+        }
+        else{
+            int rBondArray[gridS*gridS];
+            int bBondArray[gridS*gridS];
+            MPI_Recv(&rBondArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            MPI_Recv(&bBondArray,gridS*gridS,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            joinGridBS(grid,rBondArray,bBondArray);
+        }
+
         int ans = bondCheck(grid);
+        if(myRank!=0){
+            MPI_Send(&ans,1,MPI_INT,0,0,MPI_COMM_WORLD);
+            MPI_Send(&lrgestCluster,1,MPI_INT,0,1,MPI_COMM_WORLD);
 
-        if (ans==0){
-            printf("\n The grid percolates with largest cluster %i\n",lrgestCluster);
-        } else {
-            printf("\n The grid does not percolate and has a largest cluster of %i\n",lrgestCluster);
+        }
+        else{
+            int answers[numProcesses];
+            int lrgstClusters[numProcesses];
+            answers[0]=ans;
+            lrgstClusters[0]=lrgestCluster;
+            for(int p=1;p<numProcesses;p++){
+                //printf("Master attempting to recieve results from %i",p);
+                MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                //printf("I am master and  have recieved my results");
+
+            }
+            for(int q=0;q<numProcesses;q++){
+                if(lrgstClusters[q]>lrgestCluster){
+                    lrgestCluster=lrgstClusters[q];
+                }
+                if(ans==1&&answers[q]!=1){
+                    ans=0;
+                }
+            }
+
+            if (ans==0){
+                printf("\n The grid percolates with largest cluster %i\n",lrgestCluster);
+            } else {
+                printf("\n The grid does not percolate and has a largest cluster of %i\n",lrgestCluster);
+            }
         }
     }
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     if(myRank==0){
-    gettimeofday(&end, NULL);
-    float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
-             end.tv_usec - start.tv_usec) / 1.e6;
-    printf("time= %12.10f\n",delta);
+        gettimeofday(&end, NULL);
+        double delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
+                 end.tv_usec - start.tv_usec) / 1.e6;
+        printf("time= %12.10f\n",delta);
     }
     exit (EXIT_SUCCESS);
 }

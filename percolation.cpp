@@ -196,7 +196,7 @@ void joinGridNS(Node **grid,int occupancy[]) {
 }
 
 //function for creating a wraparound bond percolation grid
-void joinGridB(Bond **grid){
+void joinGridBM(Bond **grid){
 #pragma omp paralell for shared(grid) colapse(2)
     for (int i=0; i < gridS; i++){
         for (int j=0; j < gridS; j++){
@@ -252,6 +252,47 @@ void joinGridB(Bond **grid){
             }
         }
     }
+void joinGridBS(Bond **grid,int rBondArray[],int bBondArray[]){
+#pragma omp paralell for shared(grid) colapse(2)
+    for (int i=0; i < gridS; i++){
+        for (int j=0; j < gridS; j++){
+            Bond *gp = &grid[i][j];
+            int NSEW[4];
+            //Determining the 'j' of north and south component
+            if(j==0){
+                NSEW[0]=gridS-1;
+                NSEW[1]=j+1;
+            }else if(j==gridS-1){
+                NSEW[0]=j-1;
+                NSEW[1]=0;
+            }else{
+                NSEW[0]=j-1;
+                NSEW[1]=j+1;
+            }
+            //Determining the 'i' of east and west component
+            if(i==0){
+                NSEW[2]=i+1;
+                NSEW[3]=gridS-1;
+            }else if(i==gridS-1){
+                NSEW[2]=0;
+                NSEW[3]=i-1;
+            }else{
+                NSEW[2]=i+1;
+                NSEW[3]=i-1;
+            }
+            //Updating fields in the structure
+            gp->setWest(&grid[NSEW[3]][j]);
+            gp->setEast(&grid[NSEW[2]][j]);
+            gp->setSouth(&grid[i][NSEW[1]]);
+            gp->setNorth(&grid[i][NSEW[0]]);
+            gp->setNodei(i);
+            gp->setNodej(j);
+            gp ->setRBond(rBondArray[i*gridS+j]) ;
+            gp ->setBBond(bBondArray[i*gridS+j]) ;
+
+        }
+    }
+}
 
 int siteCheck(Node **grid){
     std::unordered_map<Node*,bool> gVisited;
