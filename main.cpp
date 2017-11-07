@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
             int lrgstClusters[numProcesses];
             answers[0]=ans;
             lrgstClusters[0]=lrgestCluster;
-            for(int p=1;p<numProcesses-1;p++){
+            for(int p=1;p<numProcesses;p++){
                 MPI_Recv(&answers[p],1,MPI_INT,p,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 MPI_Recv(&lrgstClusters[p],1,MPI_INT,p,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
                 printf("I am master and  have recieved my results");
@@ -232,11 +232,12 @@ int main(int argc, char *argv[])
         }
     }
     MPI_Finalize();
-    //gettimeofday(&end, NULL);
-    //float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
-    //         end.tv_usec - start.tv_usec) / 1.e6;
-
-    //printf("time= %12.10f\n",delta);
+    if(myRank==0){
+    gettimeofday(&end, NULL);
+    float delta = ((end.tv_sec  - start.tv_sec) * 1000000u +
+             end.tv_usec - start.tv_usec) / 1.e6;
+    printf("time= %12.10f\n",delta);
+    }
     exit (EXIT_SUCCESS);
 }
 
