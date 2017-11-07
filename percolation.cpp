@@ -154,7 +154,7 @@ void joinGridNM(Node **grid) {
         }
     }
 }
-void joinGridNS(Node **grid,int occupancy[]) {
+void joinGridNS(Node **grid,int *occupancy) {
 #pragma omp parallel for shared(grid) collapse(2)
     for (int i = 0; i < gridS; i++) {
         for (int j = 0; j < gridS; j++) {

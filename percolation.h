@@ -32,7 +32,7 @@ int percStatus(void);
 int percType(void);
 int trdReturn(void);
 void joinGridNM(Node **grid);
-void joinGridNS(Node **grid,int occupancy[]);
+void joinGridNS(Node **grid,int *occupancy);
 void joinGridBM(Bond **grid);
 void joinGridBS(Bond **grid,int rBondArray[],int bBondArray[]);
 void sitePerc(Node **grid);
