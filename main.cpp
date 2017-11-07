@@ -170,19 +170,17 @@ int main(int argc, char *argv[])
                 MPI_Send(&occuArray,gridS*gridS,MPI_INT,p,0,MPI_COMM_WORLD);
                 printf("complete send \n");
             }
-            //MPI_Bcast(&occuArray,gridS*gridS,MPI_INT,myRank,MPI_COMM_WORLD);
-
-
         }
 
         if(myRank!=0){
-            printf("i am %i ready to recieve",myRank);
+            printf("i am %i ready to recieve\n",myRank);
             int occuArray[gridS*gridS];
-            MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            printf("I am %i and  have recieved my occuArray",myRank);
+            int status;
+            MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,&status);
+            printf("I am %i and  have recieved my occuArray\n",myRank);
             joinGridNS(grid,occuArray);
         }
-
+        MPI_Barrier(MPI_COMM_WORLD);
 
 
 
