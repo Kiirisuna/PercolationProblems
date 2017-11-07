@@ -175,8 +175,7 @@ int main(int argc, char *argv[])
         if(myRank!=0){
             printf("i am %i ready to recieve\n",myRank);
             int occuArray[gridS*gridS];
-            int status;
-            MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,&status);
+            MPI_Recv(&occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
             printf("I am %i and  have recieved my occuArray\n",myRank);
             joinGridNS(grid,occuArray);
         }
