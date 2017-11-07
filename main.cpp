@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
         if(myRank==0) {
             //Initialise grid of NODE and allocating memory
             joinGridNM(grid);
+            printf("Master Successfully joined Grid\n");
             int occuArray[gridS*gridS];
             for(int k=0;k<gridS;k++){
                 for(int l=0;l<gridS;l++){
@@ -165,6 +166,7 @@ int main(int argc, char *argv[])
                 }
 
             }
+            printf("Master Successfully flattened Grid\n");
             for(int proc=1;proc<numProcesses;proc++){
                 printf("Master Attempting to send to %i\t",proc);
                 MPI_Send(&occuArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
