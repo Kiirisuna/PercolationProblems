@@ -174,6 +174,7 @@ int main(int argc, char *argv[])
                 MPI_Send(occuArray,gridS*gridS,MPI_INT,proc,0,MPI_COMM_WORLD);
                 printf("complete send \n");
             }
+            free(occuArray);
         }
 
         if(myRank!=0){
