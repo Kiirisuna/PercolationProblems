@@ -160,6 +160,7 @@ int main(int argc, char *argv[])
             joinGridNM(grid);
             printf("Master Successfully joined Grid\n");
             int occuArray[gridS*gridS];
+            printf("occuArrayCreated \n");
             for(int k=0;k<gridS;k++){
                 for(int l=0;l<gridS;l++){
                     occuArray[k*gridS+l]=grid[k][l].getOccu();
