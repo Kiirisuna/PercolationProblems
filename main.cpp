@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
 
         if(myRank!=0){
             printf("i am %i  and ready to recieve\n",myRank);
-            int *occuArray
+            int *occuArray;
             occuArray=(int*)malloc(gridS*gridS*sizeof(int));
             MPI_Recv(occuArray,gridS*gridS,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
             printf("I am %i and  have recieved my occuArray\n",myRank);
