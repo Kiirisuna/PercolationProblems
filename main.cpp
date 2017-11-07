@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     int numProcesses;
     MPI_Comm_size(MPI_COMM_WORLD,&numProcesses);
     MPI_Comm_rank(MPI_COMM_WORLD,&myRank);
-    printf("I am %i of %i processors \n",myRank,numProcesses);
+    //printf("I am %i of %i processors \n",myRank,numProcesses);
     int i,sum;
     struct timeval start, end;
 
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
         printf ("\nInput was incorrect,try again, or insert 'EXIT' to exit");
         validq = trdReturn();
     }
-    printf("here,after valiation %i\n",myRank);
+    //printf("here,after valiation %i\n",myRank);
     //Set number of threads that will be executed
     omp_set_num_threads(trdCount);
 
